@@ -51,9 +51,9 @@ public class EfiGraphPlugin extends ProgramPlugin {
     public EfiGraphPlugin(PluginTool tool) {
         super(tool, true, true);
         PROJECT_PATH = tool.getProject().getProjectLocator().getProjectDir().getPath();
+
         this.tool = tool;
     }
-
 
     @Override
     protected void programActivated(Program program) {

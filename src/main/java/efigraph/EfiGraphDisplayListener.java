@@ -7,6 +7,7 @@ import ghidra.program.model.address.AddressSet;
 import ghidra.program.model.address.AddressSetView;
 import ghidra.program.model.listing.Program;
 import ghidra.service.graph.GraphDisplay;
+import ghidra.util.Msg;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,13 +39,7 @@ class EfiGraphDisplayListener extends AddressBasedGraphDisplayListener {
 
     @Override
     protected Address getAddressForVertexId(String vertexId) {
-        int firstcolon = vertexId.indexOf(':');
-        if (firstcolon == -1) {
-            return (null);
-        }
-
-        int firstSpace = vertexId.indexOf(' ');
-        String addrString = vertexId.substring(0, firstSpace);
-        return (getAddress(addrString));
+        Msg.info(this, "Get address vertex for id: " + vertexId);
+        return (getAddress(vertexId));
     }
 }

@@ -47,10 +47,11 @@ class ProgramMetaData implements Serializable
     private void parseBlocks(HashMap<String, ArrayList<String>> metaBlocks) {
         for (Map.Entry<String, ArrayList<String>> entry: metaBlocks.entrySet()) {
             final EfiEntry protocol = new EfiEntry(entry.getKey());
-            entry.getValue().forEach(e -> {
-                String[] tmp = e.split("=");
+            for (String value : entry.getValue())
+            {
+                String[] tmp = value.split("=");
                 protocol.addReference(new EfiEntry(tmp[0], tmp[1], protocol));
-            });
+            };
             functions.add(protocol);
         }
     }

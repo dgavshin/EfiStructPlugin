@@ -24,9 +24,11 @@ public class GuidDB implements Serializable {
 
 	public String getProtocol(String guid)
 	{
+		String entry = null;
+
 		if (this.guids != null)
-			return this.guids.get(guid);
-		return guid;
+			entry = this.guids.get(guid);
+		return entry == null ? guid : entry;
 	}
 
 	public static String getEntryType(String entry)
@@ -37,7 +39,7 @@ public class GuidDB implements Serializable {
 			else if (entry.matches(PROTOCOL_NAME_REGEX))
 				return "protocol";
 		}
-		return null;
+		return "unknown";
 	}
 
 	private HashMap<String, String> parseGuidsBase() {

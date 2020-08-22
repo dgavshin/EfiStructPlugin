@@ -18,8 +18,10 @@ import ghidra.util.exception.CancelledException;
 import ghidra.util.exception.GraphException;
 import ghidra.util.task.TaskMonitor;
 import resources.Icons;
+import resources.ResourceManager;
 
 import javax.swing.*;
+import javax.swing.plaf.ButtonUI;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +32,7 @@ import java.util.Map;
 public class EfiGraphProvider extends ComponentProvider {
 
     public static HashMap<String, Symbol> USER_SYMBOLS = new HashMap<>();
+    private static Icon LOGO = ResourceManager.loadImage("images/logo.png");
 
     public static final String      NAME = "Struct Efi";
     public static ProgramMetaData   PMD;
@@ -38,11 +41,6 @@ public class EfiGraphProvider extends ComponentProvider {
     public static EfiGraphPlugin    plugin;
 
     private final AttributedGraph   graph;
-//    private final List<String>      uefiFuncList = new ArrayList<>(List.of("EFI_LOCATE_PROTOCOL", "EFI_SMM_GET_SMST_LOCATION2",
-//                                        "EFI_SMM_REGISTER_PROTOCOL_NOTIFY", "REGISTER", "EFI_INSTALL_PROTOCOL_INTERFACE"));
-
-    private static final String     COLOR_ATTRIBUTE = "Color";
-    private static final String     ICON_ATTRIBUTE = "Icon";
     private HashMap<String, String> guids = new HashMap<>();
 
     private JPanel                  panel;
@@ -55,31 +53,19 @@ public class EfiGraphProvider extends ComponentProvider {
     public EfiGraphProvider(PluginTool tool, EfiGraphPlugin plugin, Program program) {
 
         super(tool, NAME, plugin.getName());
-        GraphDisplay        graphDisplay;
-        PluginTool          pluginTool;
-        GraphDisplayBroker  graphDisplayBroker;
 
         EfiGraphProvider.tool = tool;
         EfiGraphProvider.program = program;
         EfiGraphProvider.plugin = plugin;
         cacheTool = new EfiCache(program, tool);
         graph = new AttributedGraph();
-        pluginTool = plugin.getTool();
+
 
         setWindowMenuGroup(EfiGraphProvider.NAME);
+        setIcon(LOGO);
         setWindowGroup(EfiGraphProvider.NAME);
         setDefaultWindowPosition(WindowPosition.WINDOW);
-        graphDisplayBroker = tool.getService(GraphDisplayBroker.class);
         buildGraph();
-
-        try {
-            graphDisplay = graphDisplayBroker.getDefaultGraphDisplay(true, TaskMonitor.DUMMY);
-            graphDisplay.setGraph(graph, "Efi protocols", false, TaskMonitor.DUMMY);
-            graphDisplay.setGraphDisplayListener(
-                    new EfiGraphDisplayListener(pluginTool, graphDisplay, program));
-        } catch (GraphException | CancelledException | NullPointerException e) {
-            Msg.error(this, e.getMessage());
-        }
 
         addToTool();
         buildPanel();
@@ -119,14 +105,14 @@ public class EfiGraphProvider extends ComponentProvider {
         {
             addr = e.getFuncAddress(program);
             in = new AttributedVertex(addr == null ? e.getName() : addr, e.getName());
-            in.setAttribute("Icon", "Square");
-            in.setAttribute("Color", "Red");
+            in.setAttribute("Icon", "Circle");
+            in.setAttribute("Color", "Green");
             graph.addVertex(in);
             for (EfiEntry entry: e.getReferences())
             {
                 out = new AttributedVertex(entry.getKey(), entry.getName());
-                out.setAttribute("Icon", "Circle");
-                out.setAttribute("Color", "Green");
+                out.setAttribute("Icon", "Square");
+                out.setAttribute("Color", "Red");
                 graph.addVertex(out);
                 edges.add(graph.addEdge(in, out));
             }
@@ -149,10 +135,11 @@ public class EfiGraphProvider extends ComponentProvider {
     // Customize GUI
     private void buildPanel() {
         panel = new JPanel(new BorderLayout());
+        JButton button = new JButton("Construct graph");
         JTextArea textArea = new JTextArea(5, 25);
+        textArea.add(button);
         textArea.setEditable(false);
         panel.add(new JScrollPane(textArea));
-        setVisible(true);
     }
 
     // TODO: Customize actions
@@ -160,13 +147,27 @@ public class EfiGraphProvider extends ComponentProvider {
         action = new DockingAction("My Action", getName()) {
             @Override
             public void actionPerformed(ActionContext context) {
-                Msg.showInfo(getClass(), panel, "Custom Action", EfiGraphPlugin.PROJECT_PATH);
+                GraphDisplay        graphDisplay;
+                PluginTool          pluginTool;
+                GraphDisplayBroker  graphDisplayBroker;
+
+                pluginTool = plugin.getTool();
+                graphDisplayBroker = tool.getService(GraphDisplayBroker.class);
+                try {
+                    graphDisplay = graphDisplayBroker.getDefaultGraphDisplay(true, TaskMonitor.DUMMY);
+                    graphDisplay.setGraph(graph, "Efi protocols", false, TaskMonitor.DUMMY);
+                    graphDisplay.setGraphDisplayListener(
+                            new EfiGraphDisplayListener(pluginTool, graphDisplay, program));
+                } catch (GraphException | CancelledException | NullPointerException e) {
+                    Msg.error(this, e.getMessage());
+                }
             }
         };
         action.setToolBarData(new ToolBarData(Icons.ADD_ICON, null));
         action.setEnabled(true);
         action.markHelpUnnecessary();
         dockingTool.addLocalAction(this, action);
+        setVisible(true);
     }
 
     @Override

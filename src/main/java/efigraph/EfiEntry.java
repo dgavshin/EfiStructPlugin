@@ -14,31 +14,21 @@ import static efigraph.GuidDB.getEntryType;
 
 public class EfiEntry implements Serializable {
 
-	private String name;
-	private final String funcAddress;
+	private String 			name;
+	private final String 	funcAddress;
 
-	private EfiEntry parentProtocol;
-	private String service;
+	private EfiEntry 		parentProtocol;
+	private String 			service;
 //    private Symbol          symbol;
 
 	private final ArrayList<EfiEntry> references = new ArrayList<>();
-
-	public Address getAddress(Program program) {
-		if (program == null)
-			return null;
-		try {
-			return program.getAddressFactory().getAddress(this.funcAddress);
-		} catch (NullPointerException e)
-		{
-			Msg.warn(this, "[-] Can't find specified address: " + funcAddress + "\n" + e.getMessage());
-			return null;
-		}
-	}
 
 	public EfiEntry(String name, String funcAddress, EfiEntry parentProtocol) {
 
 		if (getEntryType(name).equals("guid"))
 			this.name = guidDB.getProtocol(name);
+		else
+			this.name = name;
 		this.funcAddress = funcAddress;
 		this.parentProtocol = parentProtocol;
 	}
@@ -47,6 +37,8 @@ public class EfiEntry implements Serializable {
 
 		if (getEntryType(name).equals("guid"))
 			this.name = guidDB.getProtocol(name);
+		else
+			this.name = name;
 		this.funcAddress = funcAddress;
 		this.parentProtocol = null;
 	}
@@ -54,6 +46,8 @@ public class EfiEntry implements Serializable {
 	public EfiEntry(String name) {
 		if (getEntryType(name).equals("guid"))
 			this.name = guidDB.getProtocol(name);
+		else
+			this.name = name;
 		this.parentProtocol = null;
 		this.funcAddress = null;
 	}
@@ -75,10 +69,14 @@ public class EfiEntry implements Serializable {
 			return getKey();
 		else
 		{
-			Address address = getAddress(program);
-			if (address == null)
+			try {
+				Address address = program.getAddressFactory().getAddress(this.funcAddress);
+				Msg.info(this, "[+] Founded address " + address.toString());
+				return address.toString();
+			} catch (NullPointerException e) {
+				Msg.warn(this, "[-] Can't find " + funcAddress + " address\n" + e.getMessage());
 				return null;
-			return address.toString();
+			}
 		}
 	}
 
@@ -113,8 +111,9 @@ public class EfiEntry implements Serializable {
 		Symbol symbol = getSymbol();
 		if (symbol == null) {
 			Msg.warn(this, "[-] Can't find symbol by name: " + this.name);
-			return this.name;
+			return this.funcAddress;
 		}
-		return symbol.getAddress() + " o " + symbol.getID();
+		Msg.info(this, "[+] Founded symbol by name: " + this.name);
+		return symbol.getAddress().toString();
 	}
 }
