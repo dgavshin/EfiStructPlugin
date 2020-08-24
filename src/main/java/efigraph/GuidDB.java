@@ -15,8 +15,8 @@ import static efigraph.EfiGraphProvider.plugin;
 
 public class GuidDB implements Serializable {
 
-	public static String GUID_DB_PATH = EfiCache.CACHE_FOLDER + "guids-db.ini.ser";
 	public static String GUID_DB_NAME = "guids-db.ini";
+	public static String GUID_DEFAULT = "ffffffff-ffff-ffff-ffff-ffffffffffff";
 	public static String GUID_NAME_REGEX = "^[0-9a-z]{8}-([0-9a-z]{4}-){3}[0-9a-z]{12}$";
 	public static String PROTOCOL_NAME_REGEX = "^[g\\dA-Z_]+_(GUID|PROTOCOL).?$";
 

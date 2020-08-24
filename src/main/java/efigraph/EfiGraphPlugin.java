@@ -24,30 +24,23 @@ import ghidra.framework.plugintool.PluginTool;
 import ghidra.framework.plugintool.util.PluginStatus;
 import ghidra.program.model.listing.Program;
 
-/**
- * TODO: Provide class-level documentation that describes what this plugin does.
- */
-//@formatter:off
 @PluginInfo(
-        status = PluginStatus.STABLE,
+        status = PluginStatus.UNSTABLE,
         packageName = "EfiGraphPlugin",
         category = PluginCategoryNames.GRAPH,
-        shortDescription = "Find global symbols of SMST ang BS",
-        description = "Plugin long description goes here.",
+        shortDescription = "Create graph based on EFI protocols",
+        description = "This plugin conjunction only with efiSeek analyzer. EfiGraphPlugin retrieves" +
+                " meta data from memory of current program and based on this creates links between protocols " +
+                "functions and globals services",
         servicesRequired = { ProgramManager.class },
         eventsConsumed = { ProgramActivatedPluginEvent.class }
 )
-//@formatter:on
+
 public class EfiGraphPlugin extends ProgramPlugin {
 
     EfiGraphProvider        provider;
     static String           PROJECT_PATH;
 
-    /**
-     * Plugin constructor.
-     *
-     * @param tool The plugin tool that this plugin is added to.
-     */
     public EfiGraphPlugin(PluginTool tool) {
         super(tool, true, true);
         PROJECT_PATH = tool.getProject().getProjectLocator().getProjectDir().getPath();
@@ -60,5 +53,14 @@ public class EfiGraphPlugin extends ProgramPlugin {
         super.programActivated(program);
 
         provider = new EfiGraphProvider(tool, this, program);
+        tool.getProject().getProjectData();
+    }
+
+    @Override
+    protected void programDeactivated(Program program)
+    {
+        super.programDeactivated(program);
+        if (EfiGraphProvider.cacheTool != null)
+            EfiGraphProvider.cacheTool.cacheFile(EfiGraphProvider.cacheTool.PMD, program.getName());
     }
 }
