@@ -13,6 +13,9 @@ import java.util.HashMap;
 
 import static efigraph.EfiGraphProvider.plugin;
 
+/**
+ *
+ */
 public class GuidDB implements Serializable {
 
 	public static String GUID_DB_NAME = "guids-db.ini";

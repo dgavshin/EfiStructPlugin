@@ -111,8 +111,8 @@ public class EfiGraphProvider extends ComponentProvider {
 
     /**
      * This method creates main vertices from {@link ProgramMetaData#functions},
-     * child vertices from references, finally creates edge and add all to
-     * graph
+     * child vertices from references, finally creates edges and add all of this
+     * to graph
      * @param pmd class that contains functions and references
      * @param program on the basis of which vertices will be added
      * @param suffix is a 4 first chars of program name before vertex id
@@ -153,9 +153,9 @@ public class EfiGraphProvider extends ComponentProvider {
     public static AttributedVertex createFunctionVertex(String id, String name)
     {
         AttributedVertex vn = new AttributedVertex(id, name);
-        vn.setAttribute("Type", "Function");
-        vn.setAttribute("Icon", "Circle");
-        vn.setAttribute("Color", "Green");
+            vn.setAttribute("Type", "Function");
+            vn.setAttribute("Icon", "Circle");
+            vn.setAttribute("Color", "Green");
         graph.addVertex(vn);
         return vn;
     }
