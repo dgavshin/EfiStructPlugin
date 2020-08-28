@@ -1,6 +1,5 @@
 package efigraph;
 
-import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.symbol.Symbol;
@@ -9,8 +8,8 @@ import ghidra.util.Msg;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import static efigraph.EfiGraphProvider.USER_SYMBOLS;
 import static efigraph.EfiCache.guidDB;
+import static efigraph.EfiGraphProvider.USER_SYMBOLS;
 import static efigraph.GuidDB.getEntryType;
 
 public class EfiEntry implements Serializable {
@@ -168,8 +167,7 @@ public class EfiEntry implements Serializable {
 	}
 
 	/**
-	 *
-	 * @return
+	 * @return symbol address if exists, otherwise funcAddress
 	 */
 	public String getKey()
 	{

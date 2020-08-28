@@ -10,8 +10,6 @@ import ghidra.service.graph.AttributedGraph;
 import ghidra.service.graph.AttributedVertex;
 import ghidra.service.graph.GraphDisplay;
 import ghidra.util.Msg;
-import org.jungrapht.visualization.layout.algorithms.FRLayoutAlgorithm;
-import org.jungrapht.visualization.layout.algorithms.repulsion.BarnesHutFRRepulsion;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -2,15 +2,12 @@ package efigraph;
 
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
-import ghidra.program.model.symbol.SourceType;
-import ghidra.program.model.symbol.Symbol;
 import ghidra.util.Msg;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 import static efigraph.GuidDB.GUID_DB_NAME;
 import static efigraph.ProgramMetaData.readMemoryBlocks;
