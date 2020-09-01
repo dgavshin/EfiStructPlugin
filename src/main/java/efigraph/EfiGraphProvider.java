@@ -136,8 +136,9 @@ public class EfiGraphProvider extends ComponentProvider {
             for (EfiEntry entry: e.getReferences())
             {
                 out = createProtocolVertex(suffix + entry.getKey(), suffix + entry.getName());
-                graph.addEdge(in, out);
+                graph.addEdge(in, out).setAttribute("Color", "DarkCyan");
             }
+
             vertices.add(in);
         }
         return vertices;
@@ -155,7 +156,7 @@ public class EfiGraphProvider extends ComponentProvider {
         AttributedVertex vn = new AttributedVertex(id, name);
             vn.setAttribute("Type", "Function");
             vn.setAttribute("Icon", "Circle");
-            vn.setAttribute("Color", "Green");
+            vn.setAttribute("Color", "RoyalBlue");
         graph.addVertex(vn);
         return vn;
     }
@@ -171,7 +172,7 @@ public class EfiGraphProvider extends ComponentProvider {
         AttributedVertex vn = new AttributedVertex(id, name);
         vn.setAttribute("Type", "Protocol");
         vn.setAttribute("Icon", "Square");
-        vn.setAttribute("Color", "Red");
+        vn.setAttribute("Color", "SlateBlue");
         graph.addVertex(vn);
         return vn;
     }
@@ -188,7 +189,7 @@ public class EfiGraphProvider extends ComponentProvider {
         AttributedVertex vn = new AttributedVertex(id, name);
         vn.setAttribute("Type", "File");
         vn.setAttribute("Icon", "Square");
-        vn.setAttribute("Color", "Blue");
+        vn.setAttribute("Color", "MediumSeaGreen");
         graph.addVertex(vn);
         return vn;
     }

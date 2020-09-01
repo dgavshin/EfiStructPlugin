@@ -7,7 +7,10 @@ import ghidra.program.model.mem.MemoryBlock;
 import ghidra.util.Msg;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static efigraph.GuidDB.GUID_DEFAULT;
 
@@ -31,11 +34,10 @@ class ProgramMetaData implements Serializable
                                         "installProtocol",
                                         "childSmi"));
 
-
     /**
-     * This constructor save main data about current program and file
-     * and parses this data, creating a structure of functions and
-     * protocols that are interconnected with each other
+     * This constructor stores basic data about current program and file
+     * and analyzes this data to create a structure of functions and
+     * protocols that are related with each other
      * @param path the path of efi file in Ghidra project
      * @param name name of efi file. Must have extension .efi.
      * @param metaBlocks data from {@link MemoryBlock} of specified program

@@ -1,6 +1,5 @@
 package efigraph;
 
-
 import ghidra.framework.Application;
 import ghidra.util.Msg;
 
