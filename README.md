@@ -4,7 +4,8 @@
 ### 1. О плагине
 Весь проект создан для работы с UEFI прошивками и только для их анализа в Ghidra. 
 
-Efi Graph Plugin был написан во время Summer of hack в Digital Security в дополнении к уже существующему анализатору **[efiSeek](https://github.com/DSecurity/efiSeek)**. Данный анализатор собирает метаданные о найденных протоколах в **.efi** файлах распакованной прошивки и записывает их в Memory Blocks программы. Далее **Efi Graph Plugin** стуктурирует все метаданные и составляет из них интерактивный граф связей протоколов.
+Efi Graph Plugin был написан во время [Summer of hack](https://dsec.ru) в Digital Security в дополнении к уже существующему анализатору **[efiSeek](https://github.com/DSecurity/efiSeek)**. Данный анализатор собирает метаданные о найденных протоколах в **.efi** файлах распакованной прошивки и записывает их в Memory Blocks программы. Далее **Efi Graph Plugin** стуктурирует все метаданные и составляет из них интерактивный граф связей протоколов.
+
 ![alt](https://github.com/shokking5/EfiGraphPlugin/blob/master/data/graph.png)
 
 ### 2. Связи протоколов
