@@ -106,6 +106,7 @@ public class EfiGraphProvider extends ComponentProvider {
         globals.forEach(e -> e.setAttribute("Icon", "Square"));
         globals.forEach(e -> e.setAttribute("Color", "Blue"));
         globals.forEach(graph::addVertex);
+
         return (globals);
     }
 

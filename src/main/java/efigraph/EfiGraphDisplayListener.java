@@ -1,6 +1,8 @@
 package efigraph;
 
 import ghidra.app.plugin.core.graph.AddressBasedGraphDisplayListener;
+import ghidra.framework.model.DomainObjectChangedEvent;
+import ghidra.framework.plugintool.PluginEvent;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressSet;
@@ -26,6 +28,13 @@ class EfiGraphDisplayListener extends AddressBasedGraphDisplayListener {
     {
         super(tool, program, display);
         this.graph = graph;
+    }
+
+    @Override
+    public void eventSent(PluginEvent event) {
+        super.eventSent(event);
+
+        Msg.out(event.);
     }
 
     @Override
