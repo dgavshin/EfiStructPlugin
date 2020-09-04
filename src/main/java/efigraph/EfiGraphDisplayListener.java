@@ -31,13 +31,6 @@ class EfiGraphDisplayListener extends AddressBasedGraphDisplayListener {
     }
 
     @Override
-    public void eventSent(PluginEvent event) {
-        super.eventSent(event);
-
-        Msg.out(event.);
-    }
-
-    @Override
     protected List<String> getVertices(AddressSetView selection) {
         return (new ArrayList<>());
     }
