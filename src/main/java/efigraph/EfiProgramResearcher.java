@@ -21,7 +21,7 @@ import java.util.HashMap;
 public class EfiProgramResearcher {
 
 	public EfiEntry 	target;
-	private ProjectData pd;
+	public static ProjectData pd = EfiGraphProvider.tool.getProject().getProjectData();
 
 	public HashMap<String, EfiEntry> locateEntries = new HashMap<>();
 	public HashMap<String, EfiEntry> installEntries = new HashMap<>();
@@ -33,32 +33,29 @@ public class EfiProgramResearcher {
 	{
 		this.target = target;
 		try {
-			if (this.target != null) {
-				pd = EfiGraphProvider.tool.getProject().getProjectData();
+			if (this.target != null)
 				handleFilesRecursively(EfiGraphProvider.tool.getProject().getProjectData().getRootFolder());
-			}
 			else
 				Msg.warn(this, "[-] Target is null");
-		} catch (Exception e)
-		{
+		} catch (Exception e) {
 			Msg.warn(this, "[-] Can't create EfiProgramResearcher instance: " + e.getMessage());
 		}
 	}
 
 
-	private Program getProgramFromPath(String programPath)
+	public static Program getProgramFromPath(String programPath)
 	{
 		DomainFile df;
 
 		df = pd.getFile(programPath);
 		if (df == null) {
-			Msg.error(this, "[-] Could not find program by specified path: " + programPath);
+			Msg.error(EfiProgramResearcher.class, "[-] Could not find program by specified path: " + programPath);
 			return (null);
 		}
 		try {
-			return (Program) df.getDomainObject(this, false, false, TaskMonitor.DUMMY);
+			return (Program) df.getDomainObject(EfiProgramResearcher.class, false, false, TaskMonitor.DUMMY);
 		} catch (VersionException | IOException | CancelledException e) {
-			Msg.error(this, "[-] Could not get domain object from domain file\n" + e.getMessage());
+			Msg.error(EfiProgramResearcher.class, "[-] Could not get domain object from domain file\n" + e.getMessage());
 			return (null);
 		}
 	}
@@ -72,20 +69,17 @@ public class EfiProgramResearcher {
 			pathname = file.getPathname();
 			if (!pathname.matches(".+?\\.efi"))
 				continue;
-			program = getProgramFromPath(pathname);
-			if (program == null)
-				continue;
-			analyzeReferences(program);
+			analyzeReferences(pathname, file.getName());
 		}
 		for (DomainFolder subFolder : folder.getFolders())
 			handleFilesRecursively(subFolder);
 	}
 
-	public void analyzeReferences(Program program) {
+	public void analyzeReferences(String pathname, String programName) {
 		EfiCache cache;
 
 		try {
-			cache = new EfiCache(program, EfiGraphProvider.tool);
+			cache = new EfiCache(pathname, programName);
 
 			for (EfiEntry function : cache.PMD.getFunctions()) {
 				if (!(function.getName().equals(LOCATE_PROTOCOL) && EfiGraphProvider.INSTALL_ENTRY) &&
@@ -94,9 +88,9 @@ public class EfiProgramResearcher {
 				for (EfiEntry entry : function.getReferences()) {
 					if (entry.equals(target)) {
 						if (function.getName().equals(LOCATE_PROTOCOL))
-							locateEntries.put(program.getName(), entry);
+							locateEntries.put(programName, entry);
 						else
-							installEntries.put(program.getName(), entry);
+							installEntries.put(programName, entry);
 					}
 				}
 			}

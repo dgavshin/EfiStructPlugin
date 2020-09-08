@@ -24,6 +24,9 @@ import static efigraph.GuidDB.GUID_DEFAULT;
  */
 class ProgramMetaData implements Serializable
 {
+    public static ArrayList<String> INVALID_NAMES =  new ArrayList<>(Arrays.asList("None", "Unknown", null));
+    public static ArrayList<String> INVALID_ADDRESSES = new ArrayList<>(Arrays.asList("00000000", "0000000000000000", null));
+
     private final String                  name;
     private final String                  path;
     final ArrayList<EfiEntry>     functions = new ArrayList<>();
@@ -74,13 +77,15 @@ class ProgramMetaData implements Serializable
      */
     private void parseBlocks(HashMap<String, ArrayList<String>> metaBlocks) {
         for (Map.Entry<String, ArrayList<String>> entry: metaBlocks.entrySet()) {
-            final EfiEntry protocol = new EfiEntry(entry.getKey());
+            EfiEntry function = new EfiEntry(entry.getKey(), "Function");
             for (String value : entry.getValue())
             {
                 String[] tmp = value.split("=");
-                protocol.addReference(new EfiEntry(tmp[0], tmp[1], protocol), false);
-            };
-            functions.add(protocol);
+                tmp[0] = INVALID_NAMES.contains(tmp[0]) ? null : tmp[0];
+                tmp[1] = INVALID_ADDRESSES.contains(tmp[1]) ? null : tmp[1];
+                function.addReference(new EfiEntry(tmp[0], tmp[1], function, "Protocol"), false);
+            }
+            functions.add(function);
         }
     }
 
@@ -106,7 +111,7 @@ class ProgramMetaData implements Serializable
             for (EfiEntry reference: entry.getReferences())
             {
                 str.append("\t\t").append(reference.getName()).append(" - ");
-                str.append(reference.getFuncAddress(EfiGraphProvider.program)).append("\n");
+                str.append(reference.getFuncAddress()).append("\n");
             }
         }
         return str.toString();
@@ -142,11 +147,6 @@ class ProgramMetaData implements Serializable
         return (blocks);
     }
 
-    /**
-     * Function for parsing Memory Block 
-     * @param raw
-     * @return
-     */
     public static ArrayList<String> parseRawBlock(byte[] raw)
     {
         String data;
@@ -164,9 +164,9 @@ class ProgramMetaData implements Serializable
         {
             for (EfiEntry ref: entry.getReferences())
             {
-                if (ref.getName().equals(name))
+                if (ref.getName() != null && ref.getName().equals(name))
                     return ref;
-                else if (ref.getGuid().equals(name) && !name.equals(GUID_DEFAULT))
+                else if (ref.getGuid() != null && ref.getGuid().equals(name) && !name.equals(GUID_DEFAULT))
                     return ref;
             }
         }

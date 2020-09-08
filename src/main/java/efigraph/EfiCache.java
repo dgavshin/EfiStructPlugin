@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static efigraph.EfiProgramResearcher.getProgramFromPath;
 import static efigraph.GuidDB.GUID_DB_NAME;
 import static efigraph.ProgramMetaData.readMemoryBlocks;
 
@@ -21,21 +22,15 @@ public class EfiCache {
 
     public static final String CACHE_FOLDER_NAME = "efigraph_cached";
     public Path CACHE_FOLDER;
-    public Program program;
+    public String pathname;
+    public String programName;
     public PluginTool tool;
     public static GuidDB guidDB;
     public ProgramMetaData PMD;
 
-    /**
-     * This constructor launch method {@link #initCache()}
-     *
-     * @param program that will produce cache
-     * @param tool main plugin tool
-     */
-    public EfiCache(Program program, PluginTool tool) {
-
-        this.program = program;
-        this.tool = tool;
+    public EfiCache(String pathname, String programName) {
+        this.pathname = pathname;
+        this.programName = programName;
 
         initCache();
     }
@@ -49,8 +44,7 @@ public class EfiCache {
      * deserializing and serializing respectively.
      */
     void initCache() {
-        String pathname;
-        String name;
+        Program program;
 
         this.CACHE_FOLDER = Paths.get(EfiGraphPlugin.PROJECT_PATH + "\\" + CACHE_FOLDER_NAME);
         if (!Files.exists(this.CACHE_FOLDER)) {
@@ -70,11 +64,12 @@ public class EfiCache {
             }
         }
 
-        this.PMD = (ProgramMetaData) getCachedFile(program.getName());
+        this.PMD = (ProgramMetaData) getCachedFile(programName);
         if (this.PMD == null) {
-            pathname = program.getDomainFile().getPathname();
-            name = program.getName();
-            this.PMD = new ProgramMetaData(pathname, name, readMemoryBlocks(program));
+            program = getProgramFromPath(pathname);
+            if (program == null)
+                throw new NullPointerException("Can't find program by specified pathname");
+            this.PMD = new ProgramMetaData(pathname, programName, readMemoryBlocks(program));
             cacheFile(this.PMD, this.PMD.getName());
         }
     }

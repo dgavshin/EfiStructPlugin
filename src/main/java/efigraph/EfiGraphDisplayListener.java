@@ -1,8 +1,6 @@
 package efigraph;
 
 import ghidra.app.plugin.core.graph.AddressBasedGraphDisplayListener;
-import ghidra.framework.model.DomainObjectChangedEvent;
-import ghidra.framework.plugintool.PluginEvent;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressSet;
@@ -13,9 +11,7 @@ import ghidra.service.graph.AttributedVertex;
 import ghidra.service.graph.GraphDisplay;
 import ghidra.util.Msg;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static efigraph.EfiGraphProvider.*;
 
@@ -24,8 +20,7 @@ class EfiGraphDisplayListener extends AddressBasedGraphDisplayListener {
     AttributedGraph graph;
 
     public EfiGraphDisplayListener(PluginTool tool, GraphDisplay display,
-                                   Program program, AttributedGraph graph)
-    {
+                                   Program program, AttributedGraph graph) {
         super(tool, program, display);
         this.graph = graph;
     }
@@ -36,8 +31,7 @@ class EfiGraphDisplayListener extends AddressBasedGraphDisplayListener {
     }
 
     @Override
-    protected AddressSet getAddressSetForVertices(List<String> vertexIds)
-    {
+    protected AddressSet getAddressSetForVertices(List<String> vertexIds) {
         AddressSet set = new AddressSet();
         for (String id : vertexIds) {
             Address address = getAddressForVertexId(id);
@@ -49,8 +43,7 @@ class EfiGraphDisplayListener extends AddressBasedGraphDisplayListener {
     }
 
     @Override
-    protected Address getAddressForVertexId(String vertexId)
-    {
+    protected Address getAddressForVertexId(String vertexId) {
         AttributedVertex v;
 
         Msg.info(this, "Getting the vertex address for id: " + vertexId);
@@ -58,8 +51,7 @@ class EfiGraphDisplayListener extends AddressBasedGraphDisplayListener {
         v = graph.getVertex(vertexId);
         if (v == null)
             return null;
-        switch (v.getAttribute("Type"))
-        {
+        switch (v.getAttribute("Type")) {
             case "File":
                 buildFileGraph((ProgramMetaData) cacheTool.getCachedFile(v.getName()), v);
                 break;
@@ -74,50 +66,54 @@ class EfiGraphDisplayListener extends AddressBasedGraphDisplayListener {
         return (getAddress(vertexId));
     }
 
-    private void buildFileGraph(ProgramMetaData pmd, AttributedVertex vn)
-    {
+    private void buildFileGraph(ProgramMetaData pmd, AttributedVertex vn) {
         ArrayList<AttributedVertex> vertices;
+        HashMap<String, HashMap<String, String>> attributes;
         String suffix;
 
         if (pmd == null)
             return;
+
+        attributes = getRandomAttributes(pmd.getName());
         suffix = pmd.getName().substring(0, 4) + ": ";
-        vertices = findServices(pmd, null, suffix);
+        vertices = findServices(pmd, null, suffix, attributes);
         if (vertices != null)
-            vertices.forEach(e -> graph.addEdge(vn, e));
+            vertices.forEach(e -> graph.addEdge(vn, e).putAttributes(attributes.get("Edge")));
     }
 
     private void findReferencesFromFiles(AttributedVertex v)
     {
-        String           name;
-        AttributedVertex vn;
-        EfiEntry         target;
+        EfiProgramResearcher epr;
+        String               name;
+        EfiEntry             target;
 
         name = v.getName().contains(":") ? v.getName().substring(6) : v.getName();
-        target = PMD.findProtocol(name);
+        if (v.getAttributeMap().containsKey("Source")) {
+            ProgramMetaData pmd = (ProgramMetaData) cacheTool.getCachedFile(v.getAttribute("Source"));
+            target = pmd.findProtocol(name);
+        }
+        else
+            target = PMD.findProtocol(name);
+        epr = new EfiProgramResearcher(target);
         if (target == null)
             return;
-        EfiProgramResearcher epr = new EfiProgramResearcher(target);
 
-        if (LOCATE_ENTRY && target.getParentProtocol().getName().equals("locateProtocol")) {
-            for (Map.Entry<String, EfiEntry> e: epr.installEntries.entrySet())
-            {
-                Msg.info(this, "[+] Adding new vertex from " + e.getKey() + " file via Install Protocol named " + e.getValue().getName());
-                if (graph.getVertex(e.getKey()) == null) {
-                    vn = createThirdPartyReference(e.getKey(), e.getKey());
-                    graph.addEdge(vn, v);
-                }
-            }
-        }
+        if (LOCATE_ENTRY && target.getParentProtocol().getName().equals("locateProtocol"))
+            handleReference(epr.installEntries, v);
         if (INSTALL_ENTRY && target.getParentProtocol().getName().equals("installProtocol"))
+            handleReference(epr.locateEntries, v);
+    }
+
+    private void handleReference(HashMap<String, EfiEntry> ref, AttributedVertex v)
+    {
+        AttributedVertex vn;
+
+        for (Map.Entry<String, EfiEntry> e: ref.entrySet())
         {
-            for (Map.Entry<String, EfiEntry> e: epr.locateEntries.entrySet())
-            {
-                Msg.info(this, "[+] Adding new vertex from " + e.getKey() + " file via Locate Protocol named " + e.getValue().getName());
-                if (graph.getVertex(e.getKey()) == null) {
-                    vn = createThirdPartyReference(e.getKey(), e.getKey());
-                    graph.addEdge(v, vn);
-                }
+            Msg.info(this, "[+] Adding new vertex from " + e.getKey());
+            if (graph.getVertex(e.getKey()) == null && !e.getKey().equals(EfiGraphProvider.program.getName())) {
+                vn = new EfiEntry(e.getKey(), "File").createVertex("", program, DEFINED_COLORS);
+                graph.addEdge(v, vn).putAttributes(DEFINED_COLORS.get("Edge"));
             }
         }
     }

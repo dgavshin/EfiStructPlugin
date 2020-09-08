@@ -17,15 +17,18 @@ import ghidra.util.task.TaskMonitor;
 import resources.ResourceManager;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 
 public class EfiGraphProvider extends ComponentProvider {
 
     public static HashMap<String, Symbol> USER_SYMBOLS = new HashMap<>();
-    private static Icon LOGO = ResourceManager.loadImage("images/logo.png");
+    private static final Icon LOGO = ResourceManager.loadImage("images/logo.png");
 
     public static boolean LOCATE_ENTRY = false;
     public static boolean INSTALL_ENTRY = false;
@@ -37,14 +40,51 @@ public class EfiGraphProvider extends ComponentProvider {
     public static Program           program;
     public static EfiGraphPlugin    plugin;
     public static EfiGUI            gui;
-
     public static AttributedGraph   graph;
-    private HashMap<String, String> guids = new HashMap<>();
-
-    private JPanel                  panel;
-
+    private final JPanel            panel;
     public static EfiCache          cacheTool;
     public static GuidDB            guidDB;
+
+    public static String            TYPE = "Type";
+    public static String            COLOR = "Color";
+    public static String            ICON = "Icon";
+
+    public static HashMap<String, HashMap<String, String>> DEFINED_COLORS = new HashMap<>()
+    {
+        {
+            put("Edge", new HashMap<>() {{ put(COLOR, "DarkCyan"); }});
+            put("Function", new HashMap<>(){{ put(COLOR, "0x4169E1"); put(ICON, "Circle"); put(TYPE, "Function");}});
+            put("Protocol", new HashMap<>() {{ put(COLOR, "0x6A5ACD"); put(ICON, "Square"); put(TYPE, "Protocol");}});
+            put("File", new HashMap<>() {{ put(COLOR, "OrangeRed"); put(ICON, "Polygon"); put(TYPE, "File");}});
+        }
+    };
+
+    public static HashMap<String, HashMap<String, String>> getRandomAttributes(String filename)
+    {
+        Function<Color, String> toHex = (Color color) ->
+                "0x" + String.format("%02X%02X%02X",color.getRed(), color.getGreen(), color.getBlue());
+
+
+        HashMap<String, HashMap<String, String>> attributes;
+        Color base;
+
+        Color protocolColor;
+        Color edgeColor;
+
+        attributes = new HashMap<>();
+        base = new Color(
+                                    (int) (Math.random() * 1000.0)  % 256,
+                                    (int) (Math.random() * 1000.0)  % 256,
+                                    (int) (Math.random() * 1000.0)  % 256
+                                 );
+        edgeColor = base.brighter();
+        protocolColor = base.darker();
+
+        attributes.put("Function", new HashMap<>(){{ put(COLOR, toHex.apply(base)); put(ICON, "Circle"); put(TYPE, "Function"); put("Source", filename);}});
+        attributes.put("Protocol", new HashMap<>(){{ put(COLOR, toHex.apply(protocolColor)); put(ICON, "Square"); put(TYPE, "Protocol"); put("Source", filename);}});
+        attributes.put("Edge", new HashMap<>() {{ put(COLOR, toHex.apply(edgeColor));put("Source", filename); }});
+        return attributes;
+    }
 
     /**
      * This class is responsible for drawing the graph {@link #buildGraph()},
@@ -55,6 +95,7 @@ public class EfiGraphProvider extends ComponentProvider {
      * @param plugin {@link EfiGraphProvider}
      * @param program that is opened by the user
      */
+
     public EfiGraphProvider(PluginTool tool, EfiGraphPlugin plugin, Program program) {
 
         super(tool, NAME, plugin.getName());
@@ -64,7 +105,7 @@ public class EfiGraphProvider extends ComponentProvider {
         EfiGraphProvider.plugin = plugin;
 
         getUserSymbols(program).forEach(e -> USER_SYMBOLS.put(e.getName(), e));
-        cacheTool = new EfiCache(program, tool);
+        cacheTool = new EfiCache(program.getDomainFile().getPathname(), program.getName());
         guidDB = EfiCache.guidDB;
         PMD = cacheTool.PMD;
         graph = new AttributedGraph();
@@ -121,78 +162,28 @@ public class EfiGraphProvider extends ComponentProvider {
      *               similar programs
      * @return created and added to graph function vertices
      */
-    public static ArrayList<AttributedVertex> findServices(ProgramMetaData pmd, Program program, String suffix) {
+    public static ArrayList<AttributedVertex> findServices(ProgramMetaData pmd,
+                                                           Program program,
+                                                           String suffix,
+                                                           HashMap<String, HashMap<String, String>> attributes) {
         ArrayList<AttributedVertex> vertices = new ArrayList<>();
         AttributedVertex in;
         AttributedVertex out;
-        String           addr = null;
 
         if (pmd == null || pmd.getFunctions() == null)
             return null;
         for (EfiEntry e: pmd.getFunctions())
         {
-            if (program != null)
-                addr = e.getFuncAddress(program);
-            in = createFunctionVertex(addr == null ? suffix + e.getName() : suffix + addr, suffix + e.getName());
+            in = e.createVertex(suffix, program, attributes);
             for (EfiEntry entry: e.getReferences())
             {
-                out = createProtocolVertex(suffix + entry.getKey(), suffix + entry.getName());
-                graph.addEdge(in, out).setAttribute("Color", "DarkCyan");
+                out = entry.createVertex(suffix, program, attributes);
+                graph.addVertex(out);
+                graph.addEdge(in, out).putAttributes(attributes.get("Edge"));
             }
-
             vertices.add(in);
         }
         return vertices;
-    }
-
-    /**
-     * This method is intended for creating EFI function vertices:
-     * install protocol, locate protocol, reg interrupt protocol, etc.
-     * @param id the name of function
-     * @param name the name of function
-     * @return created and added to graph function vertex
-     */
-    public static AttributedVertex createFunctionVertex(String id, String name)
-    {
-        AttributedVertex vn = new AttributedVertex(id, name);
-            vn.setAttribute("Type", "Function");
-            vn.setAttribute("Icon", "Circle");
-            vn.setAttribute("Color", "RoyalBlue");
-        graph.addVertex(vn);
-        return vn;
-    }
-
-    /**
-     * This method is intended for creating EFI {@code protocol} vertices
-     * @param id the address where the global variable was declared.
-     * @param name the name of protocol
-     * @return created and added to graph protocol vertex
-     */
-    public static AttributedVertex createProtocolVertex(String id, String name)
-    {
-        AttributedVertex vn = new AttributedVertex(id, name);
-        vn.setAttribute("Type", "Protocol");
-        vn.setAttribute("Icon", "Square");
-        vn.setAttribute("Color", "SlateBlue");
-        graph.addVertex(vn);
-        return vn;
-    }
-
-    /**
-     * This method is intended for creating reference link from
-     * another analyzed program by {@link EfiProgramResearcher}.
-     * @param id the name of program
-     * @param name the name of program
-     * @return created and added to graph protocol vertex
-     */
-    public static AttributedVertex createThirdPartyReference(String id, String name)
-    {
-        AttributedVertex vn = new AttributedVertex(id, name);
-        vn.setAttribute("Type", "File");
-        vn.setAttribute("Icon", "Square");
-        vn.setAttribute("Color", "MediumSeaGreen");
-        graph.addVertex(vn);
-        return vn;
     }
 
     /**
@@ -208,7 +199,7 @@ public class EfiGraphProvider extends ComponentProvider {
 //        HashMap<EfiEntry, AttributedVertex> protocols;
 
 //        globals = findGlobals();
-        findServices(PMD, program, "");
+        findServices(PMD, program, "", DEFINED_COLORS);
 //        protocols = findProtocols(services);
     }
 
