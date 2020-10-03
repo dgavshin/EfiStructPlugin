@@ -4,7 +4,7 @@
 ### 1. About plugin
 The whole project was created to work with UEFI firmware and only for their analysis in Ghidra.
 
-The Efi Graph Plugin was written during the [Summer of hack](https://dsec.ru/about/summerofhack/) at Digital Security, in addition to the already existing analyzer **[efiSeek](https://github.com/DSecurity/efiSeek)**. This analyzer collects metadata about found protocols in **.efi** files of unpacked firmware and writes them to Memory Blocks of the program. Next, ** Efi Graph Plugin ** structures all metadata and composes an interactive graph of protocol connections.
+The Efi Graph Plugin was written during the [Summer of hack](https://dsec.ru/about/summerofhack/) at Digital Security, in addition to the already existing analyzer **[efiSeek](https://github.com/DSecurity/efiSeek)**. This analyzer collects metadata about found protocols in **.efi** files of unpacked firmware and writes them to Memory Blocks of the program. Next, **Efi Graph Plugin** structures all metadata and composes an interactive graph of protocol connections.
 
 ![alt](https://github.com/shokking5/EfiGraphPlugin/blob/master/data/graph.png)
 
