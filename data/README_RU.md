@@ -1,4 +1,4 @@
-# Efi Graph Plugin for Ghidra 9.2
+# Efi Graph Plugin for Ghidra 9.2 [[en](https://github.com/shokking5/EfiGraphPlugin)]
 ![alt](https://github.com/shokking5/EfiGraphPlugin/blob/master/data/logo.png)
 
 ### 1. О плагине
