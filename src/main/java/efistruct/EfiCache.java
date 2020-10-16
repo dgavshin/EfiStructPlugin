@@ -1,4 +1,4 @@
-package efigraph;
+package efistruct;
 
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
@@ -9,9 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static efigraph.EfiProgramResearcher.getProgramFromPath;
-import static efigraph.GuidDB.GUID_DB_NAME;
-import static efigraph.ProgramMetaData.readMemoryBlocks;
+import static efistruct.EfiProgramResearcher.getProgramFromPath;
+import static efistruct.GuidDB.GUID_DB_NAME;
 
 /**
  * EfiCache class manages caching, retrieving from cache, and creating main instances
@@ -28,11 +27,20 @@ public class EfiCache {
     public static GuidDB guidDB;
     public ProgramMetaData PMD;
 
-    public EfiCache(String pathname, String programName) {
+    public EfiCache(String pathname, String programName, boolean isCurrent) {
         this.pathname = pathname;
         this.programName = programName;
 
-        initCache();
+        initCache(isCurrent);
+    }
+
+    public static void deleteCacheFolder(Path cacheFolder) {
+        try {
+            Files.walk(cacheFolder).map(Path::toFile).forEach(File::delete);
+        } catch (IOException e) {
+            Msg.error(EfiCache.class, "Can't delete cache folder");
+            Msg.error(EfiCache.class, e.getMessage());
+        }
     }
 
     /**
@@ -43,7 +51,7 @@ public class EfiCache {
      * {@link ObjectInputStream} and {@link ObjectOutputStream} used for
      * deserializing and serializing respectively.
      */
-    void initCache() {
+    public void initCache(boolean isCurrent) {
         Program program;
 
         this.CACHE_FOLDER = Paths.get(EfiGraphPlugin.PROJECT_PATH + "\\" + CACHE_FOLDER_NAME);
@@ -64,13 +72,16 @@ public class EfiCache {
             }
         }
 
-        this.PMD = (ProgramMetaData) getCachedFile(programName);
+        this.PMD = null;
+        if (!isCurrent)
+            this.PMD = (ProgramMetaData) getCachedFile(programName);
         if (this.PMD == null) {
-            program = getProgramFromPath(pathname);
+            program = getProgramFromPath(this.pathname);
             if (program == null)
                 throw new NullPointerException("Can't find program by specified pathname");
-            this.PMD = new ProgramMetaData(pathname, programName, readMemoryBlocks(program));
+            this.PMD = new ProgramMetaData(this.pathname, this.programName, program);
             cacheFile(this.PMD, this.PMD.getName());
+            program.release(EfiProgramResearcher.class);
         }
     }
 
@@ -89,7 +100,7 @@ public class EfiCache {
      * @param filename filename of retrieving class
      * @return deserialized object
      */
-    Object getCachedFile(String filename) {
+    public Object getCachedFile(String filename) {
         FileInputStream fis;
         ObjectInputStream ois;
         Object pmd;

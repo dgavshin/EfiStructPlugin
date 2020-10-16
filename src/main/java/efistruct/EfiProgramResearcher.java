@@ -1,9 +1,4 @@
-package efigraph;//TODO write a description for this script
-//@author
-//@category _NEW_
-//@keybinding
-//@menupath
-//@toolbar
+package efistruct;
 
 import ghidra.framework.model.DomainFile;
 import ghidra.framework.model.DomainFolder;
@@ -26,8 +21,8 @@ public class EfiProgramResearcher {
 	public HashMap<String, EfiEntry> locateEntries = new HashMap<>();
 	public HashMap<String, EfiEntry> installEntries = new HashMap<>();
 
-	public static String LOCATE_PROTOCOL = "locateProtocol";
-	public static String INSTALL_PROTOCOL = "installProtocol";
+	public static String LOCATE_PROTOCOL = "locate protocol";
+	public static String INSTALL_PROTOCOL = "install protocol";
 
 	public EfiProgramResearcher(EfiEntry target)
 	{
@@ -42,27 +37,8 @@ public class EfiProgramResearcher {
 		}
 	}
 
-
-	public static Program getProgramFromPath(String programPath)
-	{
-		DomainFile df;
-
-		df = pd.getFile(programPath);
-		if (df == null) {
-			Msg.error(EfiProgramResearcher.class, "[-] Could not find program by specified path: " + programPath);
-			return (null);
-		}
-		try {
-			return (Program) df.getDomainObject(EfiProgramResearcher.class, false, false, TaskMonitor.DUMMY);
-		} catch (VersionException | IOException | CancelledException e) {
-			Msg.error(EfiProgramResearcher.class, "[-] Could not get domain object from domain file\n" + e.getMessage());
-			return (null);
-		}
-	}
-
 	public void handleFilesRecursively(DomainFolder folder)
 	{
-		Program				program;
 		String				pathname;
 
 		for (DomainFile file : folder.getFiles()) {
@@ -79,7 +55,7 @@ public class EfiProgramResearcher {
 		EfiCache cache;
 
 		try {
-			cache = new EfiCache(pathname, programName);
+			cache = new EfiCache(pathname, programName, false);
 
 			for (EfiEntry function : cache.PMD.getFunctions()) {
 				if (!(function.getName().equals(LOCATE_PROTOCOL) && EfiGraphProvider.INSTALL_ENTRY) &&
@@ -96,6 +72,22 @@ public class EfiProgramResearcher {
 			}
 		} catch (Exception e) {
 			Msg.warn(this, "[-] Create or get cached instance of ProgramMetaData class failed: " + e.getMessage());
+		}
+	}
+
+	public static Program getProgramFromPath(String programPath) {
+		DomainFile df;
+
+		df = pd.getFile(programPath);
+		if (df == null) {
+			Msg.error(EfiProgramResearcher.class, "[-] Could not find program by specified path: " + programPath);
+			return (null);
+		}
+		try {
+			return (Program) df.getDomainObject(EfiProgramResearcher.class, false, false, TaskMonitor.DUMMY);
+		} catch (VersionException | IOException | CancelledException e) {
+			Msg.error(EfiProgramResearcher.class, "[-] Could not get domain object from domain file\n" + e.getMessage());
+			return (null);
 		}
 	}
 }

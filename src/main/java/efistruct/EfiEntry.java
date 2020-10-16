@@ -1,69 +1,55 @@
-package efigraph;
+package efistruct;
 
-import ghidra.graph.visualization.Colors;
 import ghidra.program.model.address.Address;
+import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.symbol.Symbol;
 import ghidra.service.graph.AttributedVertex;
 import ghidra.util.Msg;
-import org.apache.commons.collections4.map.CompositeMap;
-import org.apache.commons.lang.ObjectUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Dictionary;
 import java.util.HashMap;
 
-import static efigraph.EfiCache.guidDB;
-import static efigraph.EfiGraphProvider.*;
-import static efigraph.GuidDB.getEntryType;
+import static efistruct.EfiGraphPlugin.USER_SYMBOLS;
+import static efistruct.EfiGraphProvider.program;
 
 public class EfiEntry implements Serializable {
 
 	private final String 	name;
 	private final String	guid;
 	private final String	type;
+	private final String	address;
 	private final String 	funcAddress;
-	private EfiEntry 		parentEntry;
 
 	private final ArrayList<EfiEntry> references = new ArrayList<>();
+	private final EfiEntry parent;
 
 	/**
 	 * The key unit in working with graph vertices, analyzing programs,
 	 * caching. Intended for wrapping efi protocols, functions and global services.
 	 * @param name entry unique name
-	 * @param funcAddress address of function where is entry located
-	 * @param parentEntry parent entry
 	 */
-	public EfiEntry(String name, String funcAddress, EfiEntry parentEntry, String type) {
+	public EfiEntry(String name, String type)
+	{
+		this.name = name;
+		this.guid = "";
+		this.funcAddress = "";
+		this.type = type;
+		this.address = "";
+		this.parent = null;
+	}
 
-		if (getEntryType(name).equals("guid"))
-			this.name = guidDB.getProtocol(name);
-		else
-			this.name = name;
-		this.guid = name;
+	public EfiEntry(String name, String guid, String address, String type, String funcAddress, EfiEntry parent)
+	{
+		this.parent = parent;
+		this.name = name;
+		this.guid = guid;
 		this.funcAddress = funcAddress;
-		this.parentEntry = parentEntry;
 		this.type = type;
+		this.address = address;
 	}
 
-	/**
-	 * The key unit in working with graph vertices, analyzing programs,
-	 * caching. Intended for wrapping efi protocols, functions and global services.
-	 * @param name entry unique name
-	 */
-	public EfiEntry(String name, String type) {
-
-		if (getEntryType(name).equals("guid"))
-			this.name = guidDB.getProtocol(name);
-		else
-			this.name = name;
-		this.guid = name;
-		this.type = type;
-		this.parentEntry = null;
-		this.funcAddress = null;
-	}
 
 	/**
 	 * Compares two entries by their guids and names.
@@ -95,25 +81,6 @@ public class EfiEntry implements Serializable {
 	}
 
 	/**
-	 *
-	 * @param parentEntry a unit that has some parent relation to the unit
-	 *                          of the class being called. (For example, service
-	 *                          gBS call locate protocol, for locate protocol entry
-	 *                          gBS is parent)
-	 */
-	public void setParentEntry(EfiEntry parentEntry) {
-		this.parentEntry = parentEntry;
-	}
-
-	/**
-	 * @return EfiEntry instance that has some parent relation with this class,
-	 * null if class does not have a parent ({@link EfiEntry#parentEntry} is null).
-	 */
-	public EfiEntry getParentProtocol() {
-		return parentEntry;
-	}
-
-	/**
 	 * @return the name of this entry
 	 */
 	public String getName() {
@@ -122,18 +89,6 @@ public class EfiEntry implements Serializable {
 
 	public String getFuncAddress() {
 		return funcAddress;
-	}
-
-	/**
-	 * Creates some kind of child link between entry and class being called.
-	 * @param entry child entry
-	 * @param fromAnotherFile if true, for entry will not be set parent,
-	 *                        otherwise as parent will be set this class.
-	 */
-	public void addReference(EfiEntry entry, boolean fromAnotherFile) {
-		references.add(entry);
-		if (!fromAnotherFile)
-			entry.setParentEntry(this);
 	}
 
 	/**
@@ -149,9 +104,13 @@ public class EfiEntry implements Serializable {
 	public ArrayList<EfiEntry> getReferences() {
 		return references;
 	}
+	public void	addReferences(ArrayList<EfiEntry> list)
+	{
+		references.addAll(list);
+	}
 
 	/**
-	 * This method uses global HashMap {@link EfiGraphProvider#USER_SYMBOLS}
+	 * This method uses global HashMap
 	 * which contains users symbols. User symbols are symbols with flag
 	 * {@link ghidra.program.model.symbol.SourceType#USER_DEFINED} in Symbol Table.
 	 * @return symbol by entry {@link EfiEntry#name}.
@@ -166,21 +125,55 @@ public class EfiEntry implements Serializable {
 
 		if (program != null)
 		{
-			if (this.name == null && funcAddress != null) {
-				address = program.getAddressFactory().getAddress(funcAddress);
+			if (this.address != null) {
+				address = program.getAddressFactory().getAddress(this.address);
 				if (address != null)
 					return address.toString();
 			}
-			else if (this.name != null && funcAddress == null)
+			else if (this.funcAddress != null)
+			{
+				address = program.getAddressFactory().getAddress(this.funcAddress);
+				if (address != null)
+					return address.toString();
+			}
+			else if (this.name != null)
 			{
 				symbol = getSymbol();
 				if (symbol != null)
 					return symbol.getAddress().toString();
+				else
+					return name;
 			}
-			else
-				return this.name;
 		}
 		return this.name + ":" + this.funcAddress;
+	}
+
+	public Address getAddress()
+	{
+		try {
+			return (program.getAddressFactory().getAddress(this.address));
+		} catch (Exception e)
+		{
+			Msg.error(this, "Can't retrieve address from address string " + this.address);
+			return (null);
+		}
+	}
+
+	public Function getFunction()
+	{
+		try {
+			Address address = program.getAddressFactory().getAddress(funcAddress);
+			return program.getFunctionManager().getFunctionAt(address);
+		} catch (NullPointerException e)
+		{
+			Msg.error(EfiEntry.class, "Can't find function by specified address - " + this.funcAddress);
+			return null;
+		}
+	}
+
+	public EfiEntry getParent()
+	{
+		return this.parent;
 	}
 
 	public AttributedVertex createVertex(String suffix, Program program, HashMap<String, HashMap<String, String>> attributes)

@@ -1,4 +1,4 @@
-package efigraph;
+package efistruct;
 
 import ghidra.app.plugin.core.graph.AddressBasedGraphDisplayListener;
 import ghidra.framework.plugintool.PluginTool;
@@ -11,9 +11,14 @@ import ghidra.service.graph.AttributedVertex;
 import ghidra.service.graph.GraphDisplay;
 import ghidra.util.Msg;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static efigraph.EfiGraphProvider.*;
+import static efistruct.EfiGraphProvider.*;
+import static efistruct.EfiProgramResearcher.INSTALL_PROTOCOL;
+import static efistruct.EfiProgramResearcher.LOCATE_PROTOCOL;
 
 class EfiGraphDisplayListener extends AddressBasedGraphDisplayListener {
 
@@ -93,14 +98,14 @@ class EfiGraphDisplayListener extends AddressBasedGraphDisplayListener {
             target = pmd.findProtocol(name);
         }
         else
-            target = PMD.findProtocol(name);
+            target = EfiGraphProvider.PMD.findProtocol(name);
         epr = new EfiProgramResearcher(target);
         if (target == null)
             return;
 
-        if (LOCATE_ENTRY && target.getParentProtocol().getName().equals("locateProtocol"))
+        if (LOCATE_ENTRY && target.getParent().getName().equals(LOCATE_PROTOCOL))
             handleReference(epr.installEntries, v);
-        if (INSTALL_ENTRY && target.getParentProtocol().getName().equals("installProtocol"))
+        if (INSTALL_ENTRY && target.getParent().getName().equals(INSTALL_PROTOCOL))
             handleReference(epr.locateEntries, v);
     }
 

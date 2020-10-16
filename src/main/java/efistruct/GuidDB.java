@@ -1,4 +1,4 @@
-package efigraph;
+package efistruct;
 
 import ghidra.framework.Application;
 import ghidra.util.Msg;
@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 
-import static efigraph.EfiGraphProvider.plugin;
+import static efistruct.EfiGraphProvider.plugin;
 
 /**
  *
@@ -60,7 +60,8 @@ public class GuidDB implements Serializable {
 
 		String[] tempGuids = guidSrt.split(delimits);
 		for (int j = 0; j < tempGuids.length; j += 2) {
-			if (tempGuids[j].compareToIgnoreCase("[EDK]") == 0 || tempGuids[j].compareToIgnoreCase("[AMI]") == 0
+			if (tempGuids[j].compareToIgnoreCase("[EDK]") == 0
+					|| tempGuids[j].compareToIgnoreCase("[AMI]") == 0
 					|| tempGuids[j].compareToIgnoreCase("[Apple]") == 0
 					|| tempGuids[j].compareToIgnoreCase("[INTEL]") == 0
 					|| tempGuids[j].compareToIgnoreCase("[NEW]") == 0
