@@ -178,12 +178,12 @@ public class EfiGraphProvider extends ComponentProviderAdapter {
 		tool.setMenuGroup(new String[]{"Graph", "EFI Graph"}, "Graph");
 
 		new ActionBuilder("Graph Code Flow", getName())
-				.menuPath(MENU_GRAPH, "EFI Struct", "Graph")
+				.menuPath(MENU_GRAPH, "EFI Struct", "Show graph")
 				.menuGroup("Graph", "A")
 				.onAction(c -> displayGraph())
 				.buildAndInstall(tool);
 		new ActionBuilder("EFI Graph", getName())
-				.menuPath(MENU_GRAPH, "EFI Struct", "Table")
+				.menuPath(MENU_GRAPH, "EFI Struct", "Show tree")
 				.menuGroup("Graph", "B")
 				.onAction(c -> setVisible(true))
 				.buildAndInstall(tool);

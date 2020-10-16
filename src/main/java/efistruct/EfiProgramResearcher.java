@@ -10,7 +10,8 @@ import ghidra.util.exception.VersionException;
 import ghidra.util.task.TaskMonitor;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class EfiProgramResearcher {
@@ -18,8 +19,7 @@ public class EfiProgramResearcher {
 	public EfiEntry 	target;
 	public static ProjectData pd = EfiGraphProvider.tool.getProject().getProjectData();
 
-	public HashMap<String, EfiEntry> locateEntries = new HashMap<>();
-	public HashMap<String, EfiEntry> installEntries = new HashMap<>();
+	public Set<ProgramMetaData> founded_programs = new HashSet<>();
 
 	public static String LOCATE_PROTOCOL = "locate protocol";
 	public static String INSTALL_PROTOCOL = "install protocol";
@@ -58,17 +58,14 @@ public class EfiProgramResearcher {
 			cache = new EfiCache(pathname, programName, false);
 
 			for (EfiEntry function : cache.PMD.getFunctions()) {
-				if (!(function.getName().equals(LOCATE_PROTOCOL) && EfiGraphProvider.INSTALL_ENTRY) &&
-						!(function.getName().equals(INSTALL_PROTOCOL) && EfiGraphProvider.LOCATE_ENTRY))
+				if (function.getName().equals(target.getParent().getName())
+						|| (!function.getName().equals(LOCATE_PROTOCOL)
+						&& !function.getName().equals(INSTALL_PROTOCOL)))
 					continue;
-				for (EfiEntry entry : function.getReferences()) {
-					if (entry.equals(target)) {
-						if (function.getName().equals(LOCATE_PROTOCOL))
-							locateEntries.put(programName, entry);
-						else
-							installEntries.put(programName, entry);
-					}
-				}
+				function.getReferences().forEach(e -> {
+					if (e.equals(target))
+						founded_programs.add(cache.PMD);
+				});
 			}
 		} catch (Exception e) {
 			Msg.warn(this, "[-] Create or get cached instance of ProgramMetaData class failed: " + e.getMessage());

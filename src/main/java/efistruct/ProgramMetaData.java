@@ -164,6 +164,13 @@ public class ProgramMetaData implements Serializable {
 		return null;
 	}
 
+	public EfiEntry toEfiEntry()
+	{
+		EfiEntry entry = new EfiEntry(this.getName(), "Source");
+		entry.addReferences(functions);
+		return entry;
+	}
+
 	/**
 	 * @return String in format:
 	 * filename

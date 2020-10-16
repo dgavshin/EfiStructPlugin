@@ -10,6 +10,7 @@ import ghidra.util.Msg;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 import static efistruct.EfiGraphPlugin.USER_SYMBOLS;
 import static efistruct.EfiGraphProvider.program;
@@ -70,6 +71,11 @@ public class EfiEntry implements Serializable {
 		return false;
 	}
 
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, guid, type, address, funcAddress);
+	}
+
 	/**
 	 * Globally unique identifier (GUID) is a 128-bit number
 	 * used to identify information in computer systems
@@ -107,6 +113,9 @@ public class EfiEntry implements Serializable {
 	public void	addReferences(ArrayList<EfiEntry> list)
 	{
 		references.addAll(list);
+	}
+	public void addReference(EfiEntry entry) {
+		references.add(entry);
 	}
 
 	/**

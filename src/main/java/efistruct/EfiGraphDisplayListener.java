@@ -11,10 +11,7 @@ import ghidra.service.graph.AttributedVertex;
 import ghidra.service.graph.GraphDisplay;
 import ghidra.util.Msg;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static efistruct.EfiGraphProvider.*;
 import static efistruct.EfiProgramResearcher.INSTALL_PROTOCOL;
@@ -102,22 +99,18 @@ class EfiGraphDisplayListener extends AddressBasedGraphDisplayListener {
         epr = new EfiProgramResearcher(target);
         if (target == null)
             return;
-
-        if (LOCATE_ENTRY && target.getParent().getName().equals(LOCATE_PROTOCOL))
-            handleReference(epr.installEntries, v);
-        if (INSTALL_ENTRY && target.getParent().getName().equals(INSTALL_PROTOCOL))
-            handleReference(epr.locateEntries, v);
+        handleReference(epr.founded_programs, v);
     }
 
-    private void handleReference(HashMap<String, EfiEntry> ref, AttributedVertex v)
+    private void handleReference(Set<ProgramMetaData> ref, AttributedVertex v)
     {
         AttributedVertex vn;
 
-        for (Map.Entry<String, EfiEntry> e: ref.entrySet())
+        for (ProgramMetaData e: ref)
         {
-            Msg.info(this, "[+] Adding new vertex from " + e.getKey());
-            if (graph.getVertex(e.getKey()) == null && !e.getKey().equals(EfiGraphProvider.program.getName())) {
-                vn = new EfiEntry(e.getKey(), "File").createVertex("", program, DEFINED_COLORS);
+            Msg.info(this, "[+] Adding new vertex from " + e.getName());
+            if (graph.getVertex(e.getName()) == null && !e.getName().equals(EfiGraphProvider.program.getName())) {
+                vn = new EfiEntry(e.getName(), "File").createVertex("", program, DEFINED_COLORS);
                 graph.addEdge(v, vn).putAttributes(DEFINED_COLORS.get("Edge"));
             }
         }

@@ -73,7 +73,7 @@ public class EfiGraphPlugin extends ProgramPlugin {
 		super.programActivated(program);
 
 		provider = new EfiGraphProvider(tool, this, program);
-//		treeProvider = new EfiTreeProvider(tool, this, program);;
+		treeProvider = new EfiTreeProvider(program);
 	}
 
 	@Override
